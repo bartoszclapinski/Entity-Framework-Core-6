@@ -17,7 +17,7 @@ PubContext _context = new PubContext();
 //QueryAggregate();
 //InsertMultipleAuthors();
 //InsertAuthor();
-BulkAddUpdate();
+//BulkAddUpdate();
 
 void InsertMultipleAuthors()
 {
