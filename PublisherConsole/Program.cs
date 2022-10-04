@@ -7,6 +7,7 @@ PubContext _context = new PubContext();
 
 //AddAuthor();
 //GetAuthors();
+//GetAuthor();
 //AddAuthorWithBook();
 //GetAuthorsWithBooks();
 //AddSomeMoreAuthors();
@@ -227,6 +228,12 @@ void AddAuthor()
     using var context = new PubContext();
     context.Authors.Add(author);
     context.SaveChanges();
+}
+
+void GetAuthor()
+{
+    var name = "Ozeki";
+    var authors = _context.Authors.Where(a => a.LastName == name).ToList();
 }
 
 void GetAuthors()
