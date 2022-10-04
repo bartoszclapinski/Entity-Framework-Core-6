@@ -5,20 +5,125 @@ using PublisherDomain;
 
 PubContext _context = new PubContext();
 
-//AddAuthor();
-//GetAuthors();
-//GetAuthor();
-//AddAuthorWithBook();
-//GetAuthorsWithBooks();
-//AddSomeMoreAuthors();
-//QueryFilters();
-//FindIt();
-//SkipAndTakeAuthors();
-//SortAuthors();
-//QueryAggregate();
-//InsertMultipleAuthors();
-//InsertAuthor();
-//BulkAddUpdate();
+
+void CascadeDeleteInActionWhenTracked()
+{
+    var author = _context.Authors.Include(a => a.Books).FirstOrDefault(a => a.AuthorId == 8);
+    _context.Authors.Remove(author);
+    var state = _context.ChangeTracker.DebugView.LongView;
+}
+
+void ModifyingRelatedDataWhenNotTracked()
+{
+    var author = _context.Authors.Include(a => a.Books).FirstOrDefault(a => a.AuthorId == 5);
+    author.Books[0].BasePrice = (decimal)12.00;
+
+    var newContext = new PubContext();
+    //newContext.Books.Update(author.Books[0]);
+    newContext.Entry(author.Books[0]).State = EntityState.Modified;
+    var state = newContext.ChangeTracker.DebugView.ShortView;
+}
+
+void ModifyingRelatedDataWhenTracked()
+{
+    var author = _context.Authors.Include(b => b.Books).FirstOrDefault(a => a.AuthorId == 5);
+    author.Books[0].BasePrice = 10;
+    author.Books.Remove(author.Books[1]);
+    _context.ChangeTracker.DetectChanges();
+    var state = _context.ChangeTracker.DebugView.ShortView;
+}
+
+void FilterUsingRelatedData()
+{
+    var authors = _context.Authors
+        .Where(b => b.Books.Any(b => b.PublishDate.Year >= 2015))
+        .ToList();
+}
+
+void LazyLoadBooksFromAnAuthor()
+{
+    /*
+     *  To enable lazy loading:
+     *      - every nav prop in every entity must be virtual
+     *      - reference the Microsoft.EntityFramework.Proxies
+     *      - use the proxy logic provided by that package => optionsBuilder.UseLazyLoadingProxies()
+     */
+    var author = _context.Authors.FirstOrDefault(a => a.LastName == "Howey");
+    foreach (var book in author.Books)
+    {
+        Console.WriteLine(book.Title);
+    }
+}
+
+void ExplicitLoadCollection()
+{
+    //  Only single object
+    var author = _context.Authors.FirstOrDefault(a => a.LastName == "Howey");
+    _context.Entry(author).Collection(a => a.Books).Load();
+}
+
+void Projections()
+{
+    var unknownTypes = _context.Authors
+        .Select(a => new
+        {
+            AuthorId = a.AuthorId,
+            Name = a.FirstName.First() + "" + a.LastName,
+            Books = a.Books.Where(b => b.PublishDate.Year < 2000).Count()
+        })
+        .ToList();
+}
+
+void EagerLoadBooksWithAuthors()
+{
+    //var authors = _context.Authors.Include(a => a.Books).ToList();
+    var pubDateStart = new DateTime(2010, 1, 1);
+    var authors = _context.Authors
+        .Include(b => b.Books.Where(b => b.PublishDate >= pubDateStart).OrderBy(b => b.Title)).ToList();
+    authors.ForEach(a =>
+    {
+        Console.WriteLine($"{a.FirstName} {a.LastName} ({a.Books.Count})");
+        a.Books.ForEach(b => Console.WriteLine($"    {b.Title}"));
+    });
+}
+
+void AddNewBookToExistingAuthorViaBook()
+{
+    var book = new Book { Title = "Shift", PublishDate = new DateTime(2012,1,1) };
+    book.Author = _context.Authors.Find(5);
+    _context.Books.Add(book);
+    _context.SaveChanges();
+}
+
+void AddNewBookToExistingAuthor()
+{
+    var author = _context.Authors.FirstOrDefault(a => a.LastName == "Howey");
+    if (author != null)
+    {
+        author.Books.Add(new Book { Title = "Wool", PublishDate = new DateTime(2012, 1, 1) });
+    }
+    _context.SaveChanges();
+}
+
+void InsertNewAuthorWith2Books()
+{
+    var author = new Author { FirstName = "Don", LastName = "Jones" };
+    author.Books.AddRange(new List<Book> 
+    { 
+        new Book { Title = "The Never", PublishDate = new DateTime(2019,12,1) },
+        new Book { Title = "Alabaster", PublishDate = new DateTime(2019,4,1) }
+    });
+    _context.Authors.Add(author);
+    _context.SaveChanges();
+}
+
+void InsertNewAuthorWithBook()
+{
+    var author = new Author { FirstName = "Lynda", LastName = "Rutledge" };
+    author.Books.Add(new Book { Title = "West With Giraffes", PublishDate = new DateTime(2021, 2, 1) });
+    _context.Authors.Add(author);
+    _context.SaveChanges();
+}
 
 void InsertMultipleAuthors()
 {
