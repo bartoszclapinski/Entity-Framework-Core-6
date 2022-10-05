@@ -5,6 +5,37 @@ using PublisherDomain;
 
 PubContext _context = new PubContext();
 
+ConnectExistingArtistAndCoverObjects();
+CreateCoverWithExistingArtist();
+CreateNewCoverAndArtistTogether();
+
+void CreateNewCoverAndArtistTogether()
+{
+    var newArtist = new Artist { FirstName = "Kir", LastName = "Talmage" };
+    var newCover = new Cover { DesignIdeas = "We like birds!" };
+    newArtist.Covers.Add(newCover);
+    _context.Artists.Add(newArtist);
+    _context.SaveChanges();
+}
+
+void CreateCoverWithExistingArtist()
+{
+    var artistA = _context.Artists.Find(1);
+    var cover = new Cover { DesignIdeas = "Author has provided a photo" };
+    cover.Artists.Add(artistA);
+    _context.Covers.Add(cover);
+    _context.SaveChanges();
+}
+
+void ConnectExistingArtistAndCoverObjects()
+{
+    var artistA = _context.Artists.Find(1);
+    var artistB = _context.Artists.Find(2);
+    var cover = _context.Covers.Find(1);
+    cover.Artists.Add(artistA);
+    cover.Artists.Add(artistB);
+    _context.SaveChanges();
+}
 
 void CascadeDeleteInActionWhenTracked()
 {
