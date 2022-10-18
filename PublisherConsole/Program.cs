@@ -5,9 +5,65 @@ using PublisherDomain;
 
 PubContext _context = new PubContext();
 
-ConnectExistingArtistAndCoverObjects();
-CreateCoverWithExistingArtist();
-CreateNewCoverAndArtistTogether();
+
+
+void RetrieveAllArtistWithTheirCoversAndCollaborators()
+{
+    var artistsWithCovers = _context.Artists.Include(a => a.Covers).ToList();
+    foreach (var artist in artistsWithCovers)
+    {
+        Console.WriteLine($"{artist.FirstName} {artist.LastName}, design to work on:");
+        var primaryArtistId = artist.ArtistId;
+        if (artist.Covers.Count() == 0)
+        {
+            Console.WriteLine("   No covers.");
+        }
+        else
+        {
+            foreach (var c in artist.Covers)
+            {
+                string collaborators = "";
+                foreach (var ca in c.Artists.Where(ca => ca.ArtistId != primaryArtistId))
+                {
+                    collaborators += $"{ca.FirstName} {ca.LastName}";
+                }
+                
+                if (collaborators.Length > 0)
+                {
+                    collaborators = $"(with {collaborators})";
+                }
+                Console.WriteLine($"   *{c.DesignIdeas} {collaborators}");
+            }
+        }
+    }
+}
+
+void RetrieveAllArtistWithTheirCovers()
+{
+    var artistsWithCovers = _context.Artists.Include(a => a.Covers).ToList();
+    foreach (var artist in artistsWithCovers)
+    {
+        Console.WriteLine($"{artist.FirstName} {artist.LastName}, design to work on:");
+        if (artist.Covers.Count == 0)
+        {
+            Console.WriteLine("   No covers");
+        }
+        else
+        {
+            artist.Covers.ForEach(c => Console.WriteLine($"   {c.DesignIdeas}"));
+        }
+    }
+}
+
+void RetrieveAllArtistsWhoHaveCovers()
+{
+    var artists = _context.Artists.Where(a => a.Covers.Any()).ToList();
+}
+
+void RetrieveAnArtistWithTheirCovers()
+{
+    var artistWithCovers = _context.Artists.Include(a => a.Covers).FirstOrDefault(a => a.ArtistId == 1);
+}
 
 void CreateNewCoverAndArtistTogether()
 {
