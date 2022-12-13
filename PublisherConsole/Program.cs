@@ -7,6 +7,56 @@ PubContext _context = new PubContext();
 
 
 
+void ProtectingFromUniqueFK()
+{
+    var theNeverDesignIdeas = "A spirally spiral";
+    var book = _context.Books.Include(b => b.Cover).FirstOrDefault(b => b.BookId == 5);
+
+    if (book.Cover != null)
+    {
+        book.Cover.DesignIdeas = theNeverDesignIdeas;
+    }
+    else
+    {
+        book.Cover = new Cover { DesignIdeas = "A spirally spiral" };
+    }
+    _context.SaveChanges();
+}
+
+void NewBookAndCover()
+{
+    var book = new Book
+    {
+        AuthorId = 1,
+        Title = "Call Me Ishtar",
+        PublishDate = new DateTime(1973, 1, 1)
+    };
+
+    book.Cover = new Cover
+    {
+        DesignIdeas = "Image of Ishtar?"
+    };
+
+    _context.Books.Add(book);
+    _context.SaveChanges();
+}
+
+void MultiLevelInclude()
+{
+    var authorGraph = _context.Authors.AsNoTracking()
+        .Include(a => a.Books)
+        .ThenInclude(b => b.Cover)
+        .ThenInclude(c => c.Artists)
+        .FirstOrDefault(a => a.AuthorId == 1);
+}
+
+void GetAllBooksWithTheirCovers()
+{
+    var bookandcovers = _context.Books.Include(b => b.Cover).ToList();
+    bookandcovers.ForEach(book =>
+        Console.WriteLine(
+            book.Title + (book.Cover == null ? " : No cover yet" : " : " + book.Cover.DesignIdeas)));
+}
 
 void ReassignACover()
 {
