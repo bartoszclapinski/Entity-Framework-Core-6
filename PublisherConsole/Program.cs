@@ -7,6 +7,28 @@ PubContext _context = new PubContext();
 
 
 
+
+void ReassignACover()
+{
+    var coverWithArtist1001 = _context.Covers
+        .Include(c => c.Artists.Where(a => a.ArtistId == 1001))
+        .FirstOrDefault(c => c.CoverId == 1002);
+
+    coverWithArtist1001.Artists.RemoveAt(0);
+    var artist3 = _context.Artists.Find(3);
+    coverWithArtist1001.Artists.Add(artist3);
+    _context.ChangeTracker.DetectChanges();
+}
+
+void UnAssigAnArtistFromACover()
+{
+    var coverwithartist = _context.Covers.Include(c => c.Artists.Where(a => a.ArtistId == 1)).FirstOrDefault(c => c.CoverId == 1);
+    coverwithartist.Artists.RemoveAt(0);
+    _context.ChangeTracker.DetectChanges();
+    var debugview = _context.ChangeTracker.DebugView.ShortView;
+    _context.SaveChanges();
+}
+
 void RetrieveAllArtistWithTheirCoversAndCollaborators()
 {
     var artistsWithCovers = _context.Artists.Include(a => a.Covers).ToList();
